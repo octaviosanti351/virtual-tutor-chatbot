@@ -1,78 +1,47 @@
-import os
-import pickle
-import tempfile
+import streamlit as st
 from langchain.document_loaders.csv_loader import CSVLoader
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.document_loaders import PyPDFLoader
-from langchain.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.document_loaders import DirectoryLoader
+from typing import List
+from langchain.docstore.document import Document
+import os
+import glob
 
-class Embedder:
 
-    def __init__(self):
-        self.PATH = "embeddings"
-        self.createEmbeddingsDir()
 
-    def createEmbeddingsDir(self):
-        """
-        Creates a directory to store the embeddings vectors
-        """
-        if not os.path.exists(self.PATH):
-            os.mkdir(self.PATH)
+DEFAULT_VECTOR_STORE_PATH = '/home/bitlogic/IdeaProjects/virtual-tutor-chatbot/embeddings'
 
-    def storeDocEmbeds(self, file, original_filename):
-        """
-        Stores document embeddings using Langchain and FAISS
-        """
-        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
-            tmp_file.write(file)
-            tmp_file_path = tmp_file.name
-            
-        def get_file_extension(uploaded_file):
-            file_extension =  os.path.splitext(uploaded_file)[1].lower()
-            
-            return file_extension
-        
+def ingest_docs():
+
+    document = '/home/bitlogic/IdeaProjects/virtual-tutor-chatbot/documents'
+    embeddingsPath = '/home/bitlogic/IdeaProjects/virtual-tutor-chatbot/embeddings'
+    file_extension = ".faiss"
+
+    file_pattern = os.path.join(embeddingsPath, f"*{file_extension}")
+    matching_files = glob.glob(file_pattern)
+
+    if not matching_files:
+        loader = DirectoryLoader(document, glob="**/*.txt")
+        raw_documents = loader.load()
+
         text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size = 2000,
-                chunk_overlap  = 100,
-                length_function = len,
-            )
-        
-        file_extension = get_file_extension(original_filename)
+            chunk_size=400, chunk_overlap=50, separators=["\n\n", "\n", " ", ""]
+        )
 
-        if file_extension == ".csv":
-            loader = CSVLoader(file_path=tmp_file_path, encoding="utf-8",csv_args={
-                'delimiter': ',',})
-            data = loader.load()
+        documents = text_splitter.split_documents(raw_documents)
 
-        elif file_extension == ".pdf":
-            loader = PyPDFLoader(file_path=tmp_file_path)  
-            data = loader.load_and_split(text_splitter)
-        
-        elif file_extension == ".txt":
-            loader = TextLoader(file_path=tmp_file_path, encoding="utf-8")
-            data = loader.load_and_split(text_splitter)
-            
-        embeddings = OpenAIEmbeddings()
+        print(f"Going to add {len(documents)} to faiss db")
+        save_embeddings(documents, "canvas-bot")
+    else:
+        print("Files already downloaded")
 
-        vectors = FAISS.from_documents(data, embeddings)
-        os.remove(tmp_file_path)
 
-        # Save the vectors to a pickle file
-        with open(f"{self.PATH}/{original_filename}.pkl", "wb") as f:
-            pickle.dump(vectors, f)
+# save_embeddings should be an interface to work as a port for different vector store
+def save_embeddings(documents: List[Document], index: str, vector_store_path: str = DEFAULT_VECTOR_STORE_PATH):
+    embeddings = OpenAIEmbeddings(openai_api_key="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")
 
-    def getDocEmbeds(self, file, original_filename):
-        """
-        Retrieves document embeddings
-        """
-        if not os.path.isfile(f"{self.PATH}/{original_filename}.pkl"):
-            self.storeDocEmbeds(file, original_filename)
+    vector_store = FAISS.from_documents(documents=documents, embedding=embeddings)
+    vector_store.save_local(folder_path=vector_store_path, index_name=index)
 
-        # Load the vectors from the pickle file
-        with open(f"{self.PATH}/{original_filename}.pkl", "rb") as f:
-            vectors = pickle.load(f)
-        
-        return vectors

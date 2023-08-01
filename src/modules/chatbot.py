@@ -3,17 +3,20 @@ from langchain.chat_models import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts.prompt import PromptTemplate
 from langchain.callbacks import get_openai_callback
+from langchain.vectorstores import FAISS
+from langchain.embeddings.openai import OpenAIEmbeddings
+import os
 
 #fix Error: module 'langchain' has no attribute 'verbose'
 import langchain
 langchain.verbose = False
+DEFAULT_VECTOR_STORE_PATH = '/home/bitlogic/IdeaProjects/virtual-tutor-chatbot/embeddings'
 
 class Chatbot:
 
-    def __init__(self, model_name, temperature, vectors):
+    def __init__(self, model_name, temperature):
         self.model_name = model_name
         self.temperature = temperature
-        self.vectors = vectors
 
     qa_template = """
         You are a helpful AI assistant named Robby. The user gives you a file its content is represented by the following pieces of context, use them to answer the question at the end.
@@ -33,9 +36,11 @@ class Chatbot:
         """
         Start a conversational chat with a model via Langchain
         """
-        llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
+        llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature, openai_api_key="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")
 
-        retriever = self.vectors.as_retriever()
+        embeddings = OpenAIEmbeddings(openai_api_key="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")
+        doc_search = FAISS.load_local(folder_path=DEFAULT_VECTOR_STORE_PATH, index_name="canvas-bot", embeddings=embeddings)
+        retriever = doc_search.as_retriever()
 
 
         chain = ConversationalRetrievalChain.from_llm(llm=llm,
@@ -45,7 +50,6 @@ class Chatbot:
         result = chain(chain_input)
 
         st.session_state["history"].append((query, result["answer"]))
-        #count_tokens_chain(chain, chain_input)
         return result["answer"]
 
 

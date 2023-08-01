@@ -8,17 +8,6 @@ class Sidebar:
     TEMPERATURE_DEFAULT_VALUE = 0.0
     TEMPERATURE_STEP = 0.01
 
-    @staticmethod
-    def about():
-        about = st.sidebar.expander("🧠 About Robby ")
-        sections = [
-            "#### Robby is an AI chatbot with a conversational memory, designed to allow users to discuss their data in a more intuitive way. 📄",
-            "#### It uses large language models to provide users with natural language interactions about user data content. 🌐",
-            "#### Powered by [Langchain](https://github.com/hwchase17/langchain), [OpenAI](https://platform.openai.com/docs/models/gpt-3-5) and [Streamlit](https://github.com/streamlit/streamlit) ⚡",
-            "#### Source code: [yvann-hub/Robby-chatbot](https://github.com/yvann-hub/Robby-chatbot)",
-        ]
-        for section in sections:
-            about.write(section)
 
     @staticmethod
     def reset_chat_button():
