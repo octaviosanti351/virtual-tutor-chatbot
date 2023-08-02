@@ -9,10 +9,10 @@ class ChatHistory:
         st.session_state["history"] = self.history
 
     def default_greeting(self):
-        return "Hey Robby ! 👋"
+        return "Hola!"
 
     def default_prompt(self):
-        return f"Hello ! Ask me anything about anything 🤗"
+        return f"Bienvenido a tu asistente virtual!!"
 
     def initialize_user_history(self):
         st.session_state["user"] = [self.default_greeting()]
@@ -44,7 +44,7 @@ class ChatHistory:
                         st.session_state["user"][i],
                         is_user=True,
                         key=f"history_{i}_user",
-                        avatar_style="big-smile",
+                        avatar_style="fun-emoji"
                     )
                     message(st.session_state["assistant"][i], key=str(i), avatar_style="thumbs")
 

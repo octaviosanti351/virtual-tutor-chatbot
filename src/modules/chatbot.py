@@ -6,11 +6,13 @@ from langchain.callbacks import get_openai_callback
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 import os
+from dotenv import load_dotenv
 
-#fix Error: module 'langchain' has no attribute 'verbose'
+load_dotenv()
+
 import langchain
 langchain.verbose = False
-DEFAULT_VECTOR_STORE_PATH = '/home/bitlogic/IdeaProjects/virtual-tutor-chatbot/embeddings'
+DEFAULT_VECTOR_STORE_PATH = os.getenv("DATABASE_DIRECTORY")
 
 class Chatbot:
 
@@ -19,7 +21,7 @@ class Chatbot:
         self.temperature = temperature
 
     qa_template = """
-        You are a helpful AI assistant named Robby. The user gives you a file its content is represented by the following pieces of context, use them to answer the question at the end.
+            You are a helpful AI assistant named Robby. The user gives you a file its content is represented by the following pieces of context, use them to answer the question at the end.
         If you don't know the answer, just say you don't know. Do NOT try to make up an answer.
         If the question is not related to the context, politely respond that you are tuned to only answer questions that are related to the context.
         Use as much detail as possible when responding.
@@ -28,17 +30,15 @@ class Chatbot:
         =========
         question: {question}
         ======
-        """
+    """
 
     QA_PROMPT = PromptTemplate(template=qa_template, input_variables=["context","question" ])
 
     def conversational_chat(self, query):
-        """
-        Start a conversational chat with a model via Langchain
-        """
-        llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature, openai_api_key="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")
 
-        embeddings = OpenAIEmbeddings(openai_api_key="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")
+        llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature, openai_api_key=os.getenv("OPENAI_API_KEY"))
+
+        embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
         doc_search = FAISS.load_local(folder_path=DEFAULT_VECTOR_STORE_PATH, index_name="canvas-bot", embeddings=embeddings)
         retriever = doc_search.as_retriever()
 

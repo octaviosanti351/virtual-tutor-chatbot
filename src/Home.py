@@ -4,11 +4,9 @@ import re
 import sys
 from modules.history import ChatHistory
 from modules.layout import Layout
-from modules.utils import Utilities
 from modules.sidebar import Sidebar
 import modules.embedder as embedder
-
-
+from  modules.chatbot import Chatbot
 
 #To be able to update the changes made to modules in localhost (press r)
 def reload_module(module_name):
@@ -20,32 +18,33 @@ def reload_module(module_name):
 
 history_module = reload_module('modules.history')
 layout_module = reload_module('modules.layout')
-utils_module = reload_module('modules.utils')
 sidebar_module = reload_module('modules.sidebar')
 
 ChatHistory = history_module.ChatHistory
 Layout = layout_module.Layout
-Utilities = utils_module.Utilities
 Sidebar = sidebar_module.Sidebar
 
 st.set_page_config(layout="wide", page_icon="💬", page_title="Asistente Virtual Demo")
 
 # Instantiate the main components
-layout, sidebar, utils = Layout(), Sidebar(), Utilities()
-
-layout.show_header("PDF, TXT, CSV")
-
+layout, sidebar = Layout(), Sidebar()
 
 sidebar.show_options()
 
 
 embedder.ingest_docs()
 
+def setup_chatbot(model, temperature):
+
+    chatbot = Chatbot(model, temperature)
+    st.session_state["ready"] = True
+
+    return chatbot
 # Initialize chat history
 history = ChatHistory()
 try:
-    chatbot = utils.setup_chatbot( st.session_state["model"], st.session_state["temperature"]
-    )
+    #todo: poner modelo y temperatura como variable de entorno
+    chatbot = setup_chatbot( "gpt-3.5-turbo", 0)
     st.session_state["chatbot"] = chatbot
 
     if st.session_state["ready"]:

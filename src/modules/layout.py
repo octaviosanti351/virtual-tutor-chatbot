@@ -2,19 +2,6 @@ import streamlit as st
 
 class Layout:
     
-    def show_header(self, types_files):
-        """
-        Displays the header of the app
-        """
-        st.markdown(
-            f"""
-            <h1 style='text-align: center;'> Ask Robby about your {types_files} files ! 😁</h1>
-            """,
-            unsafe_allow_html=True,
-        )
-
- 
-
     def prompt_form(self):
         """
         Displays the prompt form
@@ -22,7 +9,7 @@ class Layout:
         with st.form(key="my_form", clear_on_submit=True):
             user_input = st.text_area(
                 "Query:",
-                placeholder="Ask me anything about the document...",
+                placeholder="Realiza una pregunta",
                 key="input",
                 label_visibility="collapsed",
             )
